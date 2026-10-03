@@ -12,67 +12,100 @@
         app:implementationMode="performance"
         app:scaleType="fillCenter" />
 
-    <LinearLayout
-        android:id="@+id/topControls"
+    <com.mg.camera.CameraGridView
+        android:id="@+id/gridView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="false"
+        android:focusable="false" />
+
+    <View
+        android:id="@+id/focusIndicator"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:background="@drawable/bg_focus"
+        android:visibility="gone" />
+
+    <HorizontalScrollView
+        android:id="@+id/topControlsScroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="top"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        android:paddingTop="16dp"
-        android:paddingBottom="10dp"
-        android:background="#7A000000">
+        android:fillViewport="false"
+        android:scrollbars="none"
+        android:background="#72000000">
 
-        <TextView
-            android:id="@+id/flashButton"
+        <LinearLayout
+            android:id="@+id/topControls"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_chip"
-            android:text="⚡ AUTO"
-            android:textColor="@color/white"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="10dp">
 
-        <TextView
-            android:id="@+id/aiLevelButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/bg_chip_active"
-            android:text="✦ AI"
-            android:textColor="#071018"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            <TextView
+                android:id="@+id/flashButton"
+                style="@style/TopChip"
+                android:text="⚡ AUTO" />
 
-        <Space
-            android:layout_width="0dp"
-            android:layout_height="1dp"
-            android:layout_weight="1" />
+            <TextView
+                android:id="@+id/hdrButton"
+                style="@style/TopChipActive"
+                android:text="HDR" />
 
-        <TextView
-            android:id="@+id/profileButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_chip"
-            android:text="DEVICE"
-            android:textColor="@color/white"
-            android:textSize="11sp"
-            android:textStyle="bold" />
-    </LinearLayout>
+            <TextView
+                android:id="@+id/aiLevelButton"
+                style="@style/TopChipActive"
+                android:text="✦ AI" />
+
+            <TextView
+                android:id="@+id/timerButton"
+                style="@style/TopChip"
+                android:text="⏱ OFF" />
+
+            <TextView
+                android:id="@+id/evButton"
+                style="@style/TopChip"
+                android:text="EV 0.0" />
+
+            <TextView
+                android:id="@+id/settingsButton"
+                style="@style/TopChip"
+                android:text="⚙" />
+        </LinearLayout>
+    </HorizontalScrollView>
 
     <TextView
         android:id="@+id/zoomReadout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal|top"
-        android:layout_marginTop="92dp"
+        android:layout_marginTop="82dp"
         android:background="@drawable/bg_chip"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="7dp"
         android:text="1.0×"
         android:textColor="@color/white"
         android:textSize="13sp"
         android:textStyle="bold"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/countdownText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="3"
+        android:textColor="@color/white"
+        android:textSize="72sp"
+        android:textStyle="bold"
+        android:shadowColor="#AA000000"
+        android:shadowDx="0"
+        android:shadowDy="2"
+        android:shadowRadius="10"
         android:visibility="gone" />
 
     <LinearLayout
@@ -96,7 +129,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="AI geliştiriliyor…"
+            android:text="M&amp;G işliyor…"
             android:textColor="@color/white"
             android:textSize="13sp" />
     </LinearLayout>
@@ -107,14 +140,58 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:orientation="vertical"
-        android:paddingTop="10dp"
-        android:paddingBottom="24dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="20dp"
         android:background="@drawable/bg_panel">
+
+        <LinearLayout
+            android:id="@+id/exposurePanel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="18dp"
+            android:layout_marginBottom="8dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="8dp"
+            android:background="@drawable/bg_ev_panel"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/exposureLabel"
+                android:layout_width="56dp"
+                android:layout_height="wrap_content"
+                android:text="EV 0.0"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                android:textSize="12sp" />
+
+            <SeekBar
+                android:id="@+id/exposureSeek"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="100"
+                android:progress="50"
+                android:progressTint="@color/accent"
+                android:thumbTint="@color/white" />
+
+            <TextView
+                android:id="@+id/exposureReset"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="6dp"
+                android:text="RESET"
+                android:textColor="@color/accent"
+                android:textStyle="bold"
+                android:textSize="10sp" />
+        </LinearLayout>
 
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fillViewport="true"
+            android:fillViewport="false"
             android:scrollbars="none">
 
             <LinearLayout
@@ -127,6 +204,7 @@
                 android:paddingEnd="14dp">
 
                 <TextView android:id="@+id/modeNight" style="@style/ModeChip" android:text="NIGHT" />
+                <TextView android:id="@+id/modePortrait" style="@style/ModeChip" android:text="PORTRAIT" />
                 <TextView android:id="@+id/modePhoto" style="@style/ModeChipActive" android:text="PHOTO" />
                 <TextView android:id="@+id/modeAi" style="@style/ModeChip" android:text="AI" />
                 <TextView android:id="@+id/modeZoom" style="@style/ModeChip" android:text="SUPER ZOOM" />
@@ -152,7 +230,7 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="96dp"
-            android:layout_marginTop="4dp">
+            android:layout_marginTop="2dp">
 
             <TextView
                 android:id="@+id/galleryButton"
@@ -184,6 +262,21 @@
                 android:text="↻"
                 android:textColor="@color/white"
                 android:textSize="28sp" />
+
+            <TextView
+                android:id="@+id/videoPauseButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal|top"
+                android:layout_marginTop="2dp"
+                android:background="@drawable/bg_chip"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="6dp"
+                android:text="PAUSE"
+                android:textColor="@color/white"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
         </FrameLayout>
 
         <TextView
@@ -191,9 +284,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="M&amp;G Camera • ready"
+            android:text="M&amp;G Camera • hazır"
             android:textColor="@color/muted"
             android:textSize="11sp"
+            android:paddingHorizontal="12dp"
             android:paddingBottom="2dp" />
     </LinearLayout>
 
