@@ -25,19 +25,21 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: ''
+
       - name: Install Android SDK 36
-        shell: bash
         run: |
-          yes | sdkmanager --licenses >/dev/null 2>&1 || true
           sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
       - name: Set up Gradle 9.6
         uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: '9.6.0'
-          cache-provider: basic
 
-      - name: Build APK
+      - name: Build M&G Camera APK
         run: gradle --no-daemon --stacktrace assembleDebug
 
       - name: Prepare APK
