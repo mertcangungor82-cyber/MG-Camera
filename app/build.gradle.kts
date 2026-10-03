@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "com.mg.camera"
-    compileSdk = 37
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.mg.camera"
@@ -42,7 +42,7 @@ android {
 dependencies {
     val camerax = "1.6.2"
 
-    implementation("androidx.core:core-ktx:1.19.1")
+    implementation("androidx.core:core-ktx:1.17.0")
     implementation("androidx.appcompat:appcompat:1.8.0")
     implementation("androidx.activity:activity-ktx:1.13.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.11.0")
