@@ -1,1 +1,58 @@
-@/data/data/com.termux/files/home/MG-Camera/app/src/main/res/values/styles.xml
+<resources>
+    <style name="CameraTopButton">
+        <item name="android:layout_width">44dp</item>
+        <item name="android:layout_height">44dp</item>
+        <item name="android:layout_marginHorizontal">3dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:background">@drawable/bg_top_button</item>
+    </style>
+
+    <style name="CameraTopButtonWide" parent="CameraTopButton">
+        <item name="android:layout_width">64dp</item>
+        <item name="android:textSize">11sp</item>
+    </style>
+
+    <style name="CameraModeText">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_marginHorizontal">13dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:alpha">0.58</item>
+    </style>
+
+    <style name="CameraModeTextSelected" parent="CameraModeText">
+        <item name="android:textColor">@color/accent</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:alpha">1</item>
+    </style>
+
+    <style name="ZoomCircle">
+        <item name="android:layout_width">38dp</item>
+        <item name="android:layout_height">38dp</item>
+        <item name="android:layout_marginHorizontal">5dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:background">@drawable/bg_zoom</item>
+    </style>
+
+    <style name="ZoomCircleActive" parent="ZoomCircle">
+        <item name="android:textColor">@color/black</item>
+        <item name="android:background">@drawable/bg_zoom_active</item>
+    </style>
+
+    <!-- Legacy style names kept because older resources/code may still reference them. -->
+    <style name="TopChip" parent="CameraTopButtonWide" />
+    <style name="TopChipActive" parent="CameraTopButtonWide" />
+    <style name="ModeChip" parent="CameraModeText" />
+    <style name="ModeChipActive" parent="CameraModeTextSelected" />
+    <style name="ZoomChip" parent="ZoomCircle" />
+    <style name="ZoomChipActive" parent="ZoomCircleActive" />
+</resources>

@@ -1,1 +1,3 @@
-@/data/data/com.termux/files/home/MG-Camera/app/src/main/res/drawable/bg_zoom_active.xml
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <solid android:color="@color/accent" />
+</shape>

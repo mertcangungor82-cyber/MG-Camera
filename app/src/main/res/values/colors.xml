@@ -1,1 +1,10 @@
-@/data/data/com.termux/files/home/MG-Camera/app/src/main/res/values/colors.xml
+<resources>
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="panel">#E6000000</color>
+    <color name="panel_soft">#99000000</color>
+    <color name="accent">#FFD84A</color>
+    <color name="accent2">#FFFFFF</color>
+    <color name="danger">#FF3B30</color>
+    <color name="muted">#B8BDC7</color>
+</resources>
