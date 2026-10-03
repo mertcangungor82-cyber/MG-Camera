@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black">
+
+    <androidx.camera.view.PreviewView
+        android:id="@+id/previewView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:implementationMode="performance"
+        app:scaleType="fillCenter" />
+
+    <LinearLayout
+        android:id="@+id/topControls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="10dp"
+        android:background="#7A000000">
+
+        <TextView
+            android:id="@+id/flashButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_chip"
+            android:text="⚡ AUTO"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/aiLevelButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_chip_active"
+            android:text="✦ AI"
+            android:textColor="#071018"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/profileButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_chip"
+            android:text="DEVICE"
+            android:textColor="@color/white"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/zoomReadout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|top"
+        android:layout_marginTop="92dp"
+        android:background="@drawable/bg_chip"
+        android:text="1.0×"
+        android:textColor="@color/white"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/processingOverlay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@drawable/bg_chip"
+        android:padding="18dp"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:indeterminateTint="@color/accent" />
+
+        <TextView
+            android:id="@+id/processingText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="AI geliştiriliyor…"
+            android:textColor="@color/white"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/bottomPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="vertical"
+        android:paddingTop="10dp"
+        android:paddingBottom="24dp"
+        android:background="@drawable/bg_panel">
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fillViewport="true"
+            android:scrollbars="none">
+
+            <LinearLayout
+                android:id="@+id/modeContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp">
+
+                <TextView android:id="@+id/modeNight" style="@style/ModeChip" android:text="NIGHT" />
+                <TextView android:id="@+id/modePhoto" style="@style/ModeChipActive" android:text="PHOTO" />
+                <TextView android:id="@+id/modeAi" style="@style/ModeChip" android:text="AI" />
+                <TextView android:id="@+id/modeZoom" style="@style/ModeChip" android:text="SUPER ZOOM" />
+                <TextView android:id="@+id/modeVideo" style="@style/ModeChip" android:text="VIDEO" />
+                <TextView android:id="@+id/modePro" style="@style/ModeChip" android:text="PRO" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="10dp">
+
+            <TextView android:id="@+id/zoom1" style="@style/ZoomChipActive" android:text="1×" />
+            <TextView android:id="@+id/zoom2" style="@style/ZoomChip" android:text="2×" />
+            <TextView android:id="@+id/zoom3" style="@style/ZoomChip" android:text="3×" />
+            <TextView android:id="@+id/zoom5" style="@style/ZoomChip" android:text="5×" />
+            <TextView android:id="@+id/zoom10" style="@style/ZoomChip" android:text="10×" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="96dp"
+            android:layout_marginTop="4dp">
+
+            <TextView
+                android:id="@+id/galleryButton"
+                android:layout_width="58dp"
+                android:layout_height="58dp"
+                android:layout_gravity="start|center_vertical"
+                android:layout_marginStart="26dp"
+                android:gravity="center"
+                android:background="@drawable/bg_chip"
+                android:text="▣"
+                android:textColor="@color/white"
+                android:textSize="26sp" />
+
+            <View
+                android:id="@+id/captureButton"
+                android:layout_width="76dp"
+                android:layout_height="76dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_capture" />
+
+            <TextView
+                android:id="@+id/switchCameraButton"
+                android:layout_width="58dp"
+                android:layout_height="58dp"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="26dp"
+                android:gravity="center"
+                android:background="@drawable/bg_chip"
+                android:text="↻"
+                android:textColor="@color/white"
+                android:textSize="28sp" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/statusText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="M&amp;G Camera • ready"
+            android:textColor="@color/muted"
+            android:textSize="11sp"
+            android:paddingBottom="2dp" />
+    </LinearLayout>
+
+</FrameLayout>

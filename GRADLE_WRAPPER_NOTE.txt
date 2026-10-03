@@ -1,0 +1,11 @@
+M&G Camera GitHub Actions build uses gradle/actions/setup-gradle to install Gradle 9.6.0 directly.
+Therefore gradle-wrapper.jar is not required for the cloud build.
+
+Cloud build command:
+  gradle --no-daemon --stacktrace assembleDebug
+
+Expected APK:
+  app/build/outputs/apk/debug/app-debug.apk
+
+For local Android Studio use, Android Studio can sync the project directly. If you later want a full wrapper, run:
+  gradle wrapper --gradle-version 9.6.0
