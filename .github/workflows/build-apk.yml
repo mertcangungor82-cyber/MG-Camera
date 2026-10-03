@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - main
-      - master
 
 permissions:
   contents: read
@@ -26,14 +25,11 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Install Android SDK 36
         shell: bash
         run: |
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
+          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
       - name: Set up Gradle 9.6
         uses: gradle/actions/setup-gradle@v6
@@ -44,13 +40,12 @@ jobs:
       - name: Build APK
         run: gradle --no-daemon --stacktrace assembleDebug
 
-      - name: Prepare APK name
-        shell: bash
+      - name: Prepare APK
         run: |
           cp app/build/outputs/apk/debug/app-debug.apk M-G-Camera-v0.1.0-debug.apk
           sha256sum M-G-Camera-v0.1.0-debug.apk > M-G-Camera-v0.1.0-debug.apk.sha256
 
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: M-G-Camera-APK
