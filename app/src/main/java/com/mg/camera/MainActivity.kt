@@ -188,12 +188,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startCamera() {
+        cameraController.setHdrEnabled(hdrEnabled)
         cameraController.start(
             onReady = {
                 cameraController.currentPhotoResolution()?.let {
                     binding.resolutionButton.text = resolutionShortLabel(it)
                 }
-                binding.statusText.text = "M&G Camera • native kalite hazır"
+                runCatching { DeviceCapabilityScanner(this).exportToDocuments() }
+                binding.statusText.text =
+                    "M&G Camera • ${cameraController.currentCameraHardwareLabel()}"
             },
             onError = { showError(it) }
         )
@@ -221,6 +224,7 @@ class MainActivity : AppCompatActivity() {
             }
             hdrEnabled = !hdrEnabled
             prefs.edit().putBoolean("hdr", hdrEnabled).apply()
+            cameraController.setHdrEnabled(hdrEnabled)
             updateHdrUi()
         }
 
@@ -352,7 +356,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun resolutionLongLabel(size: Size): String {
-        return "${resolutionShortLabel(size)}   ${size.width}×${size.height}"
+        val tier = when {
+            cameraController.isPhotoResolutionMaximum(size) -> " • SENSOR MAX"
+            cameraController.isPhotoResolutionHigh(size) -> " • HD"
+            else -> ""
+        }
+        return "${resolutionShortLabel(size)}$tier   ${size.width}×${size.height}"
     }
 
     private fun updateModeUi(mode: CameraMode) {

@@ -12,6 +12,7 @@ import android.os.Build
 import android.provider.MediaStore
 import android.util.Size
 import android.view.Surface
+import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.FocusMeteringAction
@@ -19,6 +20,10 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.MeteringPointFactory
 import androidx.camera.core.Preview
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
+import androidx.camera.extensions.ExtensionMode
+import androidx.camera.extensions.ExtensionsManager
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.FallbackStrategy
 import androidx.camera.video.MediaStoreOutputOptions
@@ -60,7 +65,12 @@ class CameraController(
     private var minZoom = 1f
     private var exposureIndex = 0
     private var targetPhotoSize: Size? = null
+    private var selectedCameraId: String? = null
+    private var extensionsManager: ExtensionsManager? = null
+    private var hdrRequested = false
+    private var activeExtensionMode = ExtensionMode.NONE
 
+    private val hardware = OemCameraCapabilities(context)
     private val processingExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     private val processingPipeline = ProcessingPipeline(context)
 
@@ -70,17 +80,28 @@ class CameraController(
     var onResolutionChanged: ((Size) -> Unit)? = null
 
     fun start(onReady: (() -> Unit)? = null, onError: ((Throwable) -> Unit)? = null) {
+        val mainExecutor = ContextCompat.getMainExecutor(context)
         val future = ProcessCameraProvider.getInstance(context)
         future.addListener({
             try {
                 provider = future.get()
-                ensureDefaultResolution()
-                bindForMode()
-                onReady?.invoke()
+                selectedCameraId = hardware.bestCameraId(lensFacing)
+
+                val extFuture = ExtensionsManager.getInstanceAsync(context, provider!!)
+                extFuture.addListener({
+                    extensionsManager = runCatching { extFuture.get() }.getOrNull()
+                    try {
+                        ensureDefaultResolution()
+                        bindForMode()
+                        onReady?.invoke()
+                    } catch (t: Throwable) {
+                        onError?.invoke(t)
+                    }
+                }, mainExecutor)
             } catch (t: Throwable) {
                 onError?.invoke(t)
             }
-        }, ContextCompat.getMainExecutor(context))
+        }, mainExecutor)
     }
 
     fun setMode(newMode: CameraMode) {
@@ -91,31 +112,34 @@ class CameraController(
 
     fun currentMode(): CameraMode = mode
 
-    fun supportedPhotoResolutions(): List<Size> {
-        return runCatching {
-            val manager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-            val wantedFacing = if (lensFacing == CameraSelector.LENS_FACING_FRONT) {
-                CameraCharacteristics.LENS_FACING_FRONT
-            } else {
-                CameraCharacteristics.LENS_FACING_BACK
-            }
-
-            val cameraId = manager.cameraIdList.firstOrNull { id ->
-                manager.getCameraCharacteristics(id)
-                    .get(CameraCharacteristics.LENS_FACING) == wantedFacing
-            } ?: return emptyList()
-
-            val chars = manager.getCameraCharacteristics(cameraId)
-            val map = chars.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                ?: return emptyList()
-
-            map.getOutputSizes(ImageFormat.JPEG)
-                ?.filter { it.width > 0 && it.height > 0 }
-                ?.distinctBy { "${it.width}x${it.height}" }
-                ?.sortedByDescending { it.width.toLong() * it.height.toLong() }
-                ?: emptyList()
-        }.getOrDefault(emptyList())
+    fun setHdrEnabled(enabled: Boolean) {
+        if (hdrRequested == enabled) return
+        hdrRequested = enabled
+        if (provider != null && (mode == CameraMode.PHOTO || mode == CameraMode.NIGHT)) {
+            bindForMode()
+        }
     }
+
+
+    fun supportedPhotoResolutions(): List<Size> {
+        if (selectedCameraId == null) {
+            selectedCameraId = hardware.bestCameraId(lensFacing)
+        }
+        return hardware.resolutions(selectedCameraId).map { it.size }
+    }
+
+    fun currentCameraId(): String? = selectedCameraId
+
+    fun currentCameraHardwareLabel(): String = hardware.cameraLabel(selectedCameraId)
+
+    fun currentResolutionIsHighResolution(): Boolean =
+        hardware.isHighResolution(selectedCameraId, targetPhotoSize)
+
+    fun isPhotoResolutionHigh(size: Size): Boolean =
+        hardware.isHighResolution(selectedCameraId, size)
+
+    fun isPhotoResolutionMaximum(size: Size): Boolean =
+        hardware.isMaximumResolution(selectedCameraId, size)
 
     fun currentPhotoResolution(): Size? = targetPhotoSize
 
@@ -150,7 +174,8 @@ class CameraController(
         val cameraProvider = provider ?: return
         cameraProvider.unbindAll()
 
-        val selector = CameraSelector.Builder().requireLensFacing(lensFacing).build()
+        val baseSelector = createCameraSelector(lensFacing)
+        val selector = extensionSelectorFor(baseSelector)
 
         try {
             if (mode == CameraMode.VIDEO) {
@@ -181,7 +206,11 @@ class CameraController(
             applyFlashState()
             setZoom(lastZoom)
             setExposureIndex(exposureIndex)
-            onStatus?.invoke("${mode.label} hazır")
+            val ext = extensionLabel()
+            onStatus?.invoke(
+                if (ext.isNotEmpty()) "${mode.label} • $ext"
+                else "${mode.label} hazır"
+            )
         } catch (requestedError: Throwable) {
             // Some OEM HALs advertise a large JPEG size but reject it when Preview + ImageCapture
             // are bound together. Fall back to a safe <=12MP advertised JPEG before giving up.
@@ -233,29 +262,93 @@ class CameraController(
         }
     }
 
+    private fun extensionSelectorFor(base: CameraSelector): CameraSelector {
+        activeExtensionMode = ExtensionMode.NONE
+        val desired = when {
+            mode == CameraMode.NIGHT -> ExtensionMode.NIGHT
+            mode == CameraMode.PORTRAIT -> ExtensionMode.BOKEH
+            mode == CameraMode.PHOTO && hdrRequested -> ExtensionMode.HDR
+            else -> ExtensionMode.NONE
+        }
+        if (desired == ExtensionMode.NONE) return base
+
+        val manager = extensionsManager ?: return base
+        val available = runCatching {
+            manager.isExtensionAvailable(base, desired)
+        }.getOrDefault(false)
+        if (!available) return base
+
+        return runCatching {
+            manager.getExtensionEnabledCameraSelector(base, desired)
+        }.onSuccess {
+            activeExtensionMode = desired
+        }.getOrElse {
+            activeExtensionMode = ExtensionMode.NONE
+            base
+        }
+    }
+
+    private fun extensionLabel(): String = when (activeExtensionMode) {
+        ExtensionMode.HDR -> "OEM HDR"
+        ExtensionMode.NIGHT -> "OEM NIGHT"
+        ExtensionMode.BOKEH -> "OEM BOKEH"
+        ExtensionMode.FACE_RETOUCH -> "OEM FACE"
+        ExtensionMode.AUTO -> "OEM AUTO"
+        else -> ""
+    }
+
+    private fun createCameraSelector(facing: Int): CameraSelector {
+        val preferred = selectedCameraId ?: hardware.bestCameraId(facing).also {
+            selectedCameraId = it
+        }
+        val builder = CameraSelector.Builder().requireLensFacing(facing)
+
+        if (preferred != null) {
+            builder.addCameraFilter { cameraInfos ->
+                val exact = cameraInfos.filter { info ->
+                    runCatching {
+                        Camera2CameraInfo.from(info).cameraId == preferred
+                    }.getOrDefault(false)
+                }
+                if (exact.isNotEmpty()) exact else cameraInfos
+            }
+        }
+        return builder.build()
+    }
+
     private fun createPreview(): Preview = Preview.Builder().build().also {
         it.surfaceProvider = previewView.surfaceProvider
     }
 
     @Suppress("DEPRECATION")
     private fun createImageCapture(target: Size?): ImageCapture {
-        val captureMode = if (mode == CameraMode.PHOTO || mode == CameraMode.PRO) {
+        val captureMode = if (mode == CameraMode.PRO) {
             ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY
         } else {
             ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY
         }
 
-        val quality = when (mode) {
-            CameraMode.SUPER_ZOOM, CameraMode.PORTRAIT, CameraMode.NIGHT -> 100
-            else -> 98
-        }
+        val quality = 100
 
         val builder = ImageCapture.Builder()
             .setCaptureMode(captureMode)
             .setJpegQuality(quality)
 
-        if (target != null) {
-            builder.setTargetResolution(targetForDisplayRotation(target))
+        if (target != null && activeExtensionMode == ExtensionMode.NONE) {
+            val highResolution = hardware.isHighResolution(selectedCameraId, target)
+            val selector = ResolutionSelector.Builder()
+                .setAllowedResolutionMode(
+                    if (highResolution) ResolutionSelector.PREFER_HIGHER_RESOLUTION_OVER_CAPTURE_RATE
+                    else ResolutionSelector.PREFER_CAPTURE_RATE_OVER_HIGHER_RESOLUTION
+                )
+                .setResolutionStrategy(
+                    ResolutionStrategy(
+                        targetForDisplayRotation(target),
+                        ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER
+                    )
+                )
+                .build()
+            builder.setResolutionSelector(selector)
         }
 
         return builder.build().also {
@@ -286,6 +379,7 @@ class CameraController(
         val selector = CameraSelector.Builder().requireLensFacing(target).build()
         if (cameraProvider.hasCamera(selector)) {
             lensFacing = target
+            selectedCameraId = hardware.bestCameraId(target)
             lastZoom = 1f
             exposureIndex = 0
             targetPhotoSize = null
@@ -436,6 +530,7 @@ class CameraController(
     }
 
     private fun requiresPostProcessing(settings: CaptureSettings): Boolean {
+        if (activeExtensionMode != ExtensionMode.NONE) return false
         if (settings.mode == CameraMode.PRO) return false
         if (settings.mode == CameraMode.PHOTO &&
             settings.aiLevel.name == "OFF" &&
