@@ -18,8 +18,7 @@
         android:theme="@style/Theme.MGCamera">
 
         <activity
-            android:name=".MainActivity"
-            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:name=".OemBridgeActivity"
             android:exported="true"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -27,5 +26,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false"
+            android:screenOrientation="portrait" />
     </application>
 </manifest>
