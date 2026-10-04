@@ -1,4 +1,4 @@
-name: Build M&G Cam 4.0 OEM Bridge APK
+name: Build M&G Cam 5.0 Vendor Camera APK
 
 on:
   workflow_dispatch:
@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build-debug-apk:
-    name: Build M&G Cam 4.0 APK
+    name: Build M&G Cam 5.0 APK
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -39,20 +39,20 @@ jobs:
         with:
           gradle-version: '9.6.0'
 
-      - name: Build M&G Cam 4.0 APK
+      - name: Build M&G Cam 5.0 APK
         run: gradle --no-daemon --stacktrace assembleDebug
 
       - name: Prepare APK
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk M-G-Cam-v4.0.0-OEM-Bridge-debug.apk
-          sha256sum M-G-Cam-v4.0.0-OEM-Bridge-debug.apk > M-G-Cam-v4.0.0-OEM-Bridge-debug.apk.sha256
+          cp app/build/outputs/apk/debug/app-debug.apk M-G-Cam-v5.0.0-Vendor-debug.apk
+          sha256sum M-G-Cam-v5.0.0-Vendor-debug.apk > M-G-Cam-v5.0.0-Vendor-debug.apk.sha256
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: M-G-Cam-v4-OEM-Bridge-APK
+          name: M-G-Cam-v5-Vendor-APK
           path: |
-            M-G-Cam-v4.0.0-OEM-Bridge-debug.apk
-            M-G-Cam-v4.0.0-OEM-Bridge-debug.apk.sha256
+            M-G-Cam-v5.0.0-Vendor-debug.apk
+            M-G-Cam-v5.0.0-Vendor-debug.apk.sha256
           if-no-files-found: error
           retention-days: 30

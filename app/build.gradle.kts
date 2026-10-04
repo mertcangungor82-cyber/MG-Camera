@@ -10,8 +10,8 @@ android {
         applicationId = "com.mg.camera"
         minSdk = 26
         targetSdk = 36
-        versionCode = 40
-        versionName = "4.0.0"
+        versionCode = 50
+        versionName = "5.0.0"
 
         vectorDrawables {
             useSupportLibrary = true
